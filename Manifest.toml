@@ -266,12 +266,6 @@ git-tree-sha1 = "daecd9e452f38297c686eba90dba2a6d5da52162"
 uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 version = "0.5.0"
 
-[[Makie]]
-deps = ["AbstractPlotting", "FileIO", "GLMakie", "ImageMagick", "Test"]
-git-tree-sha1 = "bc8102152f6fbcb44630f1ff0280a3f8bfbfb4ae"
-uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-version = "0.9.3"
-
 [[MappedArrays]]
 deps = ["Test"]
 git-tree-sha1 = "923441c5ac942b60bd3a842d5377d96646bcbf46"

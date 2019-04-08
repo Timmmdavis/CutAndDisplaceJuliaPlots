@@ -9,8 +9,8 @@ function DrawMeshMakie(Val,ValName,P1,P2,P3,ColorMap)
 	#P1 P2 P3 - Tri points in a list. Each row (of all three) representing a tri
 	#ColorMap - The colormap you want to use
 
-	using Makie
-	using AbstractPlotting
+	#using Makie
+	#using AbstractPlotting
 
 	#Finding respective places in the to map the colours too
 	MaxVal=maximum(Val);
@@ -38,9 +38,9 @@ function DrawMeshMakie(Val,ValName,P1,P2,P3,ColorMap)
 	color = fill(RGBAf0(1,0,0,1),length(x))
 	#Green for tri no 1
 	for i=1:n
-		color[i]	=RGBAf0(cmap2[Val[i],1],cmap2[Val[i],2],cmap2[Val[i],3],1)
-		color[i+n]	=RGBAf0(cmap2[Val[i],1],cmap2[Val[i],2],cmap2[Val[i],3],1)
-		color[i+2*n]=RGBAf0(cmap2[Val[i],1],cmap2[Val[i],2],cmap2[Val[i],3],1)
+		color[i]	=RGBAf0(ColorMap[Val[i],1],ColorMap[Val[i],2],ColorMap[Val[i],3],1)
+		color[i+n]	=RGBAf0(ColorMap[Val[i],1],ColorMap[Val[i],2],ColorMap[Val[i],3],1)
+		color[i+2*n]=RGBAf0(ColorMap[Val[i],1],ColorMap[Val[i],2],ColorMap[Val[i],3],1)
 	end
 	##set equal axis lims
 	AxMin=minimum(vec([x y z]))
@@ -55,9 +55,9 @@ function DrawMeshMakie(Val,ValName,P1,P2,P3,ColorMap)
 	#lims=p1.limits #->to check the limits are set correctly
 
 	#Add colorbar
-	colorbar = fill(RGBf0(1,0,0),length(cmap2[:,1]))
+	colorbar = fill(RGBf0(1,0,0),length(ColorMap[:,1]))
 	for i=1:cmapsz
-		colorbar[i]	   =RGBf0(cmap2[i,1],cmap2[i,2],cmap2[i,3])
+		colorbar[i]	   =RGBf0(ColorMap[i,1],ColorMap[i,2],ColorMap[i,3])
 	end
 	p2 = Scene()
 	cam2d!(p2)
@@ -69,7 +69,7 @@ function DrawMeshMakie(Val,ValName,P1,P2,P3,ColorMap)
 			show_axis = true)
 	#Set some properties on the colourbar axis
 	axis = p2[Axis]
-	axis[:names, :axisnames] = ("", Name)
+	axis[:names, :axisnames] = ("", ValName)
 	axis[:ticks, :textsize] = (0, 5)
 	axis[:grid, :linewidth] = (0, 1)
 
