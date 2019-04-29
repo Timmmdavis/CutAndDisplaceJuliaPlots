@@ -11,7 +11,7 @@ function DrawMeshMakieFilledFaces(Val,ValName,P1,P2,P3,ColorMap)
 
 	#using Makie
 	#using AbstractPlotting
-
+	#error("errir")
 	#Finding respective places in the to map the colours too
 	MaxVal=maximum(Val);
 	MinVal=minimum(Val);
@@ -76,6 +76,6 @@ function DrawMeshMakieFilledFaces(Val,ValName,P1,P2,P3,ColorMap)
 	#Group the colourbar and mesh in one plot
 	scene = vbox(p1, p2, sizes = [0.7, 0.3])
 
-	return p1
+	return scene
 
 end

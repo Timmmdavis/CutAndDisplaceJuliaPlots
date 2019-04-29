@@ -23,13 +23,13 @@ function DrawMeshMakie(P1,P2,P3)
 	indices=vec(indices);
 
 	##set equal axis lims
-	AxMin=minimum(vec([x y z]))
-	AxMax=maximum(vec([x y z]))
+	AxMin=minimum(vec([x y z]))*1.5
+	AxMax=maximum(vec([x y z]))*1.5
 	Seperation=AxMax-AxMin;
 	limits = FRect3D([AxMin AxMin AxMin], [Seperation Seperation Seperation])
 	p1 = Scene()
 	#Draw tris (colored)
-	mesh!(p1,x, y, z, indices,shading=false,limits=limits, color = :blue) #,limits=limits
+	mesh!(p1,x, y, z, indices,shading=false,limits=limits, color = :blue,transparency=true;alpha =:0.5) #,limits=limits
 	#Draw wireframe of mesh over the top
 	wireframe!(p1[end][1], color = (:black, 0.6), linewidth = 3,limits=limits)
 	#lims=p1.limits #->to check the limits are set correctly
