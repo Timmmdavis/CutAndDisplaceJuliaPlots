@@ -43,10 +43,15 @@ function DrawMeshMakieFilledFaces(Val,ValName,P1,P2,P3,ColorMap)
 		color[i+2*n]=RGBAf0(ColorMap[Val[i],1],ColorMap[Val[i],2],ColorMap[Val[i],3],1)
 	end
 	##set equal axis lims
-	AxMin=minimum(vec([x y z]))
-	AxMax=maximum(vec([x y z]))
-	Seperation=AxMax-AxMin;
-	limits = FRect3D([AxMin AxMin AxMin], [Seperation Seperation Seperation])
+	#AxMin=minimum(vec([x y z]))
+	#AxMax=maximum(vec([x y z]))
+	#Seperation=AxMax-AxMin;
+	#limits = FRect3D([AxMin AxMin AxMin], [Seperation Seperation Seperation])
+	SeperationX=maximum(x)-minimum(x)
+	SeperationY=maximum(y)-minimum(y)
+	SeperationZ=maximum(z)-minimum(z)
+	limits = FRect3D([minimum(x) minimum(y) minimum(z)], [SeperationX SeperationY SeperationZ])
+	
 	p1 = Scene()
 	#Draw tris (colored)
 	mesh!(p1,x, y, z, indices,color=color,shading=false,limits=limits) #,limits=limits

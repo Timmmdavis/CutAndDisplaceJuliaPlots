@@ -7,6 +7,7 @@ include("DrawMeshMakie.jl")
 include("DrawMeshMakieFilledFaces.jl")
 include("CptReader.jl")
 include("LoadData2.jl")
+include("SetLookDirection.jl")
 
 #Load the colormap
 Fid=CutAndDisplaceJuliaPlots.LoadData2(CutAndDisplaceJuliaPlots,"Ccool-warm2.cpt")

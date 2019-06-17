@@ -23,10 +23,17 @@ function DrawMeshMakie(P1,P2,P3)
 	indices=vec(indices);
 
 	##set equal axis lims
-	AxMin=minimum(vec([x y z]))*1.5
-	AxMax=maximum(vec([x y z]))*1.5
-	Seperation=AxMax-AxMin;
-	limits = FRect3D([AxMin AxMin AxMin], [Seperation Seperation Seperation])
+	#AxMin=minimum(vec([x y z]))*1.5
+	#AxMax=maximum(vec([x y z]))*1.5
+	#Seperation=AxMax-AxMin;
+	#limits = FRect3D([AxMin AxMin AxMin], [Seperation Seperation Seperation])
+	
+
+	SeperationX=maximum(x)-minimum(x)
+	SeperationY=maximum(y)-minimum(y)
+	SeperationZ=maximum(z)-minimum(z)
+	limits = FRect3D([minimum(x) minimum(y) minimum(z)], [SeperationX SeperationY SeperationZ])
+
 	p1 = Scene()
 	#Draw tris (colored)
 	mesh!(p1,x, y, z, indices,shading=false,limits=limits, color = :blue,transparency=true;alpha =:0.5) #,limits=limits

@@ -5,14 +5,16 @@ using Makie
 
 #Some plotting of the mesh as we go. 
 #Show current mesh:
-CutAndDisplaceJuliaPlots.DrawMeshMakie(P1,P2,P3)
+
+
+scene=CutAndDisplaceJuliaPlots.DrawMeshMakie(P1,P2,P3);
 #Plots to current scene if a scene is not set by default
-scatter!(Px, Py, Pz) #markersize = 50
+scatter!(scene,[Px Py Pz],markersize = 50,limits=scene.limits)#
 
 
 #Show normals - scale length scale by max sep of tris
 arrows!(MidPoint[:,1],MidPoint[:,2],MidPoint[:,3],
-	FaceNormalVector[:,1],FaceNormalVector[:,2],FaceNormalVector[:,3],arrowsize=:0) #lengthscale =:150
+	FaceNormalVector[:,1],FaceNormalVector[:,2],FaceNormalVector[:,3],arrowsize=:0,lengthscale =:150) #lengthscale =:150
 
 #Show computed edge points:
 scatter!(FeP1P2S.FeMd[:,1],FeP1P2S.FeMd[:,2],FeP1P2S.FeMd[:,3],color = :red) #,markersize  =:150
@@ -99,3 +101,9 @@ gr()
 scl=0.1;#length of vectors
 fig2 = plot(reuse=false,legend=false)
 scatter!(Px,Pz,ms=-Py*4) #Looking towards pos y
+
+
+
+#Tri stuff
+scene=scatter(vec(Px), vec(Py), vec(Pz),markersize = 15)#
+scatter!(scene,p1,markersize = 5,limits=scene.limits)#
