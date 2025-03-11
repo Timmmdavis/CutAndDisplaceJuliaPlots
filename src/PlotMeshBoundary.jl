@@ -40,7 +40,7 @@ for i=1:length(UniqueEdges)
     #if lps==1
     #  plot([LeadingPoint],[TrailingPoint])
     #else
-      Plots.plot!([LeadingPoint[idxa],TrailingPoint[idxa]],[LeadingPoint[idxb],TrailingPoint[idxb]],c=(:black), lab="")
+      Plots.plot!([LeadingPoint[idxa],TrailingPoint[idxa]],[LeadingPoint[idxb],TrailingPoint[idxb]],c=(:red), lab="")
     #end
     
     end
