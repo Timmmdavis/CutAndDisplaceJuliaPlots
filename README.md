@@ -1,6 +1,8 @@
 ## CutAndDisplaceJuliaPlots Example<br>
 <br>
 using Revise<br>
+using Plots<br>
+using UnicodePlots<br>
 using CutAndDisplaceJulia<br>
 using CutAndDisplaceJuliaPlots<br>
 <br>
