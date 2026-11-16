@@ -22,6 +22,10 @@ idxa=1
 idxb=3
 
 lps=0
+#Collect all boundary segments, then draw them as ONE series with NaN breaks
+#(one plot! call per edge was slow when saving a frame every propagation step)
+EdgeX=Float64[]
+EdgeZ=Float64[]
 #For each edge loop
 for i=1:length(UniqueEdges)
 
@@ -40,12 +44,15 @@ for i=1:length(UniqueEdges)
     #if lps==1
     #  plot([LeadingPoint],[TrailingPoint])
     #else
-      Plots.plot!([LeadingPoint[idxa],TrailingPoint[idxa]],[LeadingPoint[idxb],TrailingPoint[idxb]],c=(:red), lab="")
+      append!(EdgeX,[LeadingPoint[idxa],TrailingPoint[idxa],NaN])
+      append!(EdgeZ,[LeadingPoint[idxb],TrailingPoint[idxb],NaN])
     #end
     
     end
 
 end 
+
+Plots.plot!(fig,EdgeX,EdgeZ,c=(:red), lab="")
 
 return fig
 
