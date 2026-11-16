@@ -238,7 +238,7 @@ function PlotCrackState(P1, P2, P3, Dn; TipXYZ = zeros(0, 3), TipK = Float64[], 
 
     # colour bars, horizontal, in the empty bottom-right corner
     cb = MK.GridLayout(fig[4, 2], tellwidth = false, tellheight = false)
-    MK.Colorbar(cb[1, 1], mp, label = Exag > 1.5 ? @sprintf("Opening Dn [m]  (drawn ×%.0f across the crack)", Exag) : "Opening Dn [m]  (true scale)", vertical = false, flipaxis = false,
+    MK.Colorbar(cb[1, 1], mp, label = Exag > 1.5 ? @sprintf("Opening Dn [m]\ndrawn ×%.0f across the crack", Exag) : "Opening Dn [m]\ntrue scale", vertical = false, flipaxis = false,
                 width = MK.Relative(0.9), height = 12, labelsize = 12, ticklabelsize = 10)
     kp === nothing || MK.Colorbar(cb[2, 1], kp, label = "Tip KI/Kc (red >1 grows; grey = none)",
                                   vertical = false, flipaxis = false, width = MK.Relative(0.9), height = 12,
