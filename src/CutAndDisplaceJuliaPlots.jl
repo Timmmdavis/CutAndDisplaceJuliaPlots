@@ -1,7 +1,11 @@
 module CutAndDisplaceJuliaPlots
 # Import the packages we need
 import Makie  # Use import instead of using to avoid namespace conflicts
-import GLMakie  # Use import instead of using to avoid namespace conflicts
+import CairoMakie  # backend: draws without a GPU (GLMakie dropped)
+const MK = Makie
+using LinearAlgebra
+using Statistics
+using Printf
 # Optionally, if you want to provide backward compatibility:
 const AbstractPlotting = Makie
 using DelimitedFiles
@@ -36,14 +40,20 @@ include("CptReader.jl")
 include("LoadData2.jl")
 include("SetLookDirection.jl")
 include("PlotMeshBoundary.jl")
+include("CrackViews.jl")
 
 # Also export the functions
 export DrawMeshMakie, DrawMeshMakieFilledFaces, CptReader, LoadData2, SetLookDirection, PlotMeshBoundary
+export PlotCrackState, SaveFig, RenderRun, TestFigure, ReadStep, FindSteps
 
 # Load the colormap
 Fid = CutAndDisplaceJuliaPlots.LoadData2(CutAndDisplaceJuliaPlots,"Ccool-warm2.cpt")
 (cmap2) = CutAndDisplaceJuliaPlots.CptReader(Fid);
 cmap2 = cmap2./255; # RGB2Colour
 export cmap2
+
+function __init__()
+    CairoMakie.activate!(type = "png")
+end
 
 end # module
