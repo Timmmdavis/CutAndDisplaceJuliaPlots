@@ -352,7 +352,9 @@ function RenderRun(dir; every = 1, outdir = joinpath(dir, "frames"), ρ0 = nothi
     steps = FindSteps(dir)[1:every:end]
     data = [ReadStep(st) for st in steps]
     log = _readlog(dir)
-    Dmax = maximum(maximum(d.Dn) for d in data)
+    # Colour range and exaggeration from a typical frame, not the largest one (early steps can be outliers):
+    # median over frames of each frame's maximum opening. Larger openings show in the top colour.
+    Dmax = median([maximum(d.Dn) for d in data])
     Q = vcat([vcat(d.P1, d.P2, d.P3) for d in data]...)
     lo = vec(minimum(Q, dims = 1)); hi = vec(maximum(Q, dims = 1))
     hi[3] = max(hi[3], 0.0)                                  # keep the surface in view
