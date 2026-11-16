@@ -177,7 +177,6 @@ function PlotCrackState(P1, P2, P3, Dn; TipXYZ = zeros(0, 3), TipK = Float64[], 
     push!(parts, @sprintf("max Dn = %.3g m", maximum(Dn)))
     push!(parts, "$n elements")
     ttl = (haskey(meta, :step) ? "Step $(meta.step)" : "Crack") * "  |  " * join(parts, "  |  ")
-    etxt = Exag > 1.5 ? @sprintf("opening ×%.0f", Exag) : "opening ×1 (true scale)"
     sub = @sprintf("Best-fit crack plane: strike %.0f°, dip %.0f°.  Opening exaggerated ×%.0f along the crack normal only.",
                    F.az, F.dip, Exag)
 
@@ -237,24 +236,9 @@ function PlotCrackState(P1, P2, P3, Dn; TipXYZ = zeros(0, 3), TipK = Float64[], 
     MK.limits!(axM, xlo, xhi, ylo, yhi)
     MK.linkyaxes!(axF, axS); MK.linkxaxes!(axF, axM)
 
-    # exaggeration marker: double-headed arrow along the crack normal as seen in each view
-    # (drawn only where the normal is not end-on), in the panel's lower-left corner
-    for (ax, ia, ib, alo, ahi, blo, bhi) in ((axF, 1, 3, xlo, xhi, zlo, zhi), (axS, 2, 3, ylo, yhi, zlo, zhi),
-                                            (axM, 1, 2, xlo, xhi, ylo, yhi))
-        d = [F.n̂[ia], F.n̂[ib]]
-        norm(d) < 0.3 && continue
-        d ./= norm(d)
-        half = 0.1 * min(ahi - alo, bhi - blo)
-        cx = alo + 0.06 * (ahi - alo) + half * abs(d[1]); cy = blo + 0.06 * (bhi - blo) + half * abs(d[2])
-        p0 = (cx - half * d[1], cy - half * d[2]); p1 = (cx + half * d[1], cy + half * d[2])
-        MK.lines!(ax, [p0[1], p1[1]], [p0[2], p1[2]], color = :black, linewidth = 1.5)
-        MK.scatter!(ax, [p0[1], p1[1]], [p0[2], p1[2]], color = :black, markersize = 9, marker = :circle)
-        MK.text!(ax, cx, cy, text = etxt, align = (:left, :bottom), fontsize = 11, offset = (6, 6))
-    end
-
     # colour bars, horizontal, in the empty bottom-right corner
     cb = MK.GridLayout(fig[4, 2], tellwidth = false, tellheight = false)
-    MK.Colorbar(cb[1, 1], mp, label = "Opening Dn [m]", vertical = false, flipaxis = false,
+    MK.Colorbar(cb[1, 1], mp, label = Exag > 1.5 ? @sprintf("Opening Dn [m]  (drawn ×%.0f across the crack)", Exag) : "Opening Dn [m]  (true scale)", vertical = false, flipaxis = false,
                 width = MK.Relative(0.9), height = 12, labelsize = 12, ticklabelsize = 10)
     kp === nothing || MK.Colorbar(cb[2, 1], kp, label = "Tip KI/Kc (red >1 grows; grey = none)",
                                   vertical = false, flipaxis = false, width = MK.Relative(0.9), height = 12,
