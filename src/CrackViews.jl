@@ -5,9 +5,9 @@
 #   RenderRun(dir; every=5)     # frames for a whole run from its *-MeshWithDisp-ForDrawing-*.txt files
 #   TestFigure(dir)             # real, rotated and twisted cracks -> dir/FigureTest
 #
-# Square figure, one metres-per-pixel scale, in the crack's own frame (best-fit plane):
-#   Face-on (along the normal)            | Edge-on along strike (shares the up-dip axis)
-#   Edge-on down-dip (shares strike axis) | colour bars: opening Dn, tip KI/Kc
+# Square figure, one metres-per-pixel scale, world axes (third-angle layout):
+#   x–z (looking north)                  | y–z (looking west), shares z
+#   x–y (map view from above), shares x  | colour bars: opening Dn, tip KI/Kc
 # The opened crack is drawn as in CutAndDisplaceJulia.ExportCrackMesh ("MeshFilled"): walls at
 # ±Exag*Dn/2, triangles coloured by Dn; opening exaggerated (across the crack only) so the widest
 # aperture is at least 1/10 of the plot. Tip line coloured by KI/Kc on all views (red >1, blue <1).
@@ -130,47 +130,42 @@ function _drawview!(ax, ids, Pr1, Pr2, Dn, ia, ib, id, sgn, Dmax; edgealpha = 0.
 end
 
 """
-PlotCrackState(P1,P2,P3,Dn; TipXYZ, TipK, Kc, meta, Dnmax, Exag, frame, lims, pxmax)
+PlotCrackState(P1,P2,P3,Dn; TipXYZ, TipK, Kc, meta, Dnmax, Exag, lims, pxmax)
 
-Three aligned orthographic views of the opened crack, in the crack's own frame (best-fit plane):
-  Face-on (looking along the normal) | Edge-on looking along strike (shares the up-dip axis)
-  Edge-on looking down-dip (shares the along-strike axis)
-Walls at ±Exag*Dn/2 (as ExportCrackMesh), triangles coloured by opening; thick tip line coloured by
-K/Kc on the face-on view. All panels use one metres-per-pixel scale, sized to the crack.
-frame/lims fix the view for animations (RenderRun sets them): lims = (ulo,uhi,vlo,vhi,nlo,nhi).
+Three aligned orthographic views of the opened crack in world coordinates:
+  x–z (looking north, +y)            | y–z (looking west, -x), shares z
+  x–y (map view from above), shares x | colour bars: opening Dn, tip KI/Kc
+Walls at ±Exag*Dn/2 along the crack normal (as ExportCrackMesh), triangles coloured by opening,
+tip line coloured by KI/Kc on all views. One metres-per-pixel scale for every panel.
+lims = (xlo,xhi,ylo,yhi,zlo,zhi) fixes the views (RenderRun sets it for a whole run).
 """
 function PlotCrackState(P1, P2, P3, Dn; TipXYZ = zeros(0, 3), TipK = Float64[], Kc = 5e7,
-                        meta = NamedTuple(), Dnmax = nothing, Exag = nothing, frame = nothing,
-                        lims = nothing, pxmax = 800)
+                        meta = NamedTuple(), Dnmax = nothing, Exag = nothing, lims = nothing, pxmax = 800)
     n = size(P1, 1)
-    F = frame === nothing ? ViewFrame(P1, P2, P3) : frame
-    û, v̂, n̂ = F.û, F.v̂, F.n̂
-    proj(W) = hcat(W * û, W * v̂, W * n̂ .- F.n0)               # along û, v̂ (absolute); across n̂ (about the plane)
+    F = ViewFrame(P1, P2, P3)                                  # only for the crack normal and strike/dip text
     V = vcat(P1, P2, P3)
     Dmax = Dnmax === nothing ? max(maximum(Dn), eps()) : Dnmax
     if Exag === nothing
-        Q = proj(V)
-        span = max(maximum(Q[:, 1]) - minimum(Q[:, 1]), maximum(Q[:, 2]) - minimum(Q[:, 2]))
+        span = max(maximum(V[:, 1]) - minimum(V[:, 1]), maximum(V[:, 2]) - minimum(V[:, 2]),
+                   maximum(V[:, 3]) - minimum(V[:, 3]))
         Exag = max(1.0, 0.1 * 1.1 * span / Dmax)              # widest aperture ≥ 1/10 of the plot
     end
-    ids, X, W1, W2 = CrackWalls(P1, P2, P3, Dn, Exag, n̂)
-    Pr1 = proj(W1); Pr2 = proj(W2); Px = proj(X)
+    ids, X, W1, W2 = CrackWalls(P1, P2, P3, Dn, Exag, F.n̂)
     if lims === nothing
-        A = vcat(Pr1, Pr2)
+        A = vcat(W1, W2)
         lo = vec(minimum(A, dims = 1)); hi = vec(maximum(A, dims = 1))
-        pad = 0.05 * max(hi[1] - lo[1], hi[2] - lo[2])
+        pad = 0.05 * maximum(hi .- lo)
         lims = (lo[1] - pad, hi[1] + pad, lo[2] - pad, hi[2] + pad, lo[3] - pad, hi[3] + pad)
     end
-    (ulo, uhi, vlo, vhi, nlo, nhi) = lims
-    # Square drawing: face-on box made square (ur = vr = L), edge-on panels nr wide/tall,
-    # so the whole figure is (L+nr) x (L+nr) at one metres-per-pixel scale.
-    L = max(uhi - ulo, vhi - vlo)
-    uc = (ulo + uhi) / 2; vc = (vlo + vhi) / 2
-    ulo, uhi = uc - L / 2, uc + L / 2
-    vlo, vhi = vc - L / 2, vc + L / 2
-    nr = max(nhi - nlo, 0.32 * L)                             # room for the colour bars in the corner
-    nc = (nlo + nhi) / 2; nlo, nhi = nc - nr / 2, nc + nr / 2
-    s = pxmax / (L + nr)                                      # pixels per metre, same in every panel
+    (xlo, xhi, ylo, yhi, zlo, zhi) = lims
+    # Square drawing: x–z box made square (side L); y range at least 0.32 L (room for colour bars)
+    L = max(xhi - xlo, zhi - zlo)
+    xc = (xlo + xhi) / 2; zc = (zlo + zhi) / 2
+    xlo, xhi = xc - L / 2, xc + L / 2
+    zlo, zhi = zc - L / 2, zc + L / 2
+    yr = max(yhi - ylo, 0.32 * L)
+    yc = (ylo + yhi) / 2; ylo, yhi = yc - yr / 2, yc + yr / 2
+    s = pxmax / (L + yr)                                      # pixels per metre, same in every panel
 
     # ---- text
     tipz = maximum(V[:, 3])
@@ -182,32 +177,30 @@ function PlotCrackState(P1, P2, P3, Dn; TipXYZ = zeros(0, 3), TipK = Float64[], 
     push!(parts, @sprintf("max Dn = %.3g m", maximum(Dn)))
     push!(parts, "$n elements")
     ttl = (haskey(meta, :step) ? "Step $(meta.step)" : "Crack") * "  |  " * join(parts, "  |  ")
-    sub = @sprintf("Crack plane: strike %.0f°, dip %.0f°.  Opening (across-crack direction only) exaggerated ×%.0f.", F.az, F.dip, Exag)
-    near_vertical = abs(v̂[3]) > 0.98
-    lu = @sprintf("along strike (az %03.0f°) [m]", F.az)
-    lv = near_vertical ? "z [m]" : @sprintf("up-dip (dip %.0f°) [m]", F.dip)
-    ln = "across crack [m]"
+    etxt = Exag > 1.5 ? @sprintf("opening ×%.0f", Exag) : "opening ×1 (true scale)"
+    sub = @sprintf("Best-fit crack plane: strike %.0f°, dip %.0f°.  Opening exaggerated ×%.0f along the crack normal only.",
+                   F.az, F.dip, Exag)
 
     # ---- layout: exact pixel sizes per axis, figure resized to fit
     fig = _figure(1400, 1400)
     MK.Label(fig[1, 1:2], ttl, fontsize = 16, tellwidth = false)
     MK.Label(fig[2, 1:2], sub, fontsize = 13, color = :grey30, tellwidth = false)
-    axF = MK.Axis(fig[3, 1], width = s * L, height = s * L, xlabel = lu, ylabel = lv,
-                  title = "Face-on (looking along the crack normal)")
-    axA = MK.Axis(fig[3, 2], width = s * nr, height = s * L, xlabel = ln, ylabel = lv,
-                  title = "Edge-on, along strike")
-    axB = MK.Axis(fig[4, 1], width = s * L, height = s * nr, xlabel = lu, ylabel = ln,
-                  title = near_vertical ? "Edge-on, from above" : "Edge-on, down-dip")
-    mp = _drawview!(axF, ids, Pr1, Pr2, Dn, 1, 2, 3, -1, Dmax)  # viewer on the -n̂ side
-    _drawview!(axA, ids, Pr1, Pr2, Dn, 3, 2, 1, 1, Dmax; edgealpha = 0.07)   # viewer at +û
-    _drawview!(axB, ids, Pr1, Pr2, Dn, 1, 3, 2, 1, Dmax; edgealpha = 0.07)   # viewer at +v̂ (above, if vertical)
-    if near_vertical && vhi >= 0
-        for ax in (axF, axA)
+    axF = MK.Axis(fig[3, 1], width = s * L, height = s * L, xlabel = "x [m]", ylabel = "z [m]",
+                  title = "x–z (looking north, +y)")
+    axS = MK.Axis(fig[3, 2], width = s * yr, height = s * L, xlabel = "y [m]", ylabel = "z [m]",
+                  title = "y–z (looking west, −x)")
+    axM = MK.Axis(fig[4, 1], width = s * L, height = s * yr, xlabel = "x [m]", ylabel = "y [m]",
+                  title = "x–y (map view, from above)")
+    mp = _drawview!(axF, ids, W1, W2, Dn, 1, 3, 2, -1, Dmax)  # viewer at -y
+    _drawview!(axS, ids, W1, W2, Dn, 2, 3, 1, 1, Dmax; edgealpha = 0.1)   # viewer at +x
+    _drawview!(axM, ids, W1, W2, Dn, 1, 2, 3, 1, Dmax; edgealpha = 0.1)   # viewer above
+    if zhi >= 0
+        for ax in (axF, axS)
             MK.hlines!(ax, [0.0], color = :saddlebrown, linestyle = :dash, linewidth = 2)
         end
     end
 
-    # ---- tip line coloured by K/Kc (face-on view)
+    # ---- tip line coloured by K/Kc, all views
     BE = BoundaryEdges(ids)
     kseg = fill(NaN, length(BE))
     good = size(TipXYZ, 1) > 0 ? findall(i -> all(isfinite, TipXYZ[i, :]) && isfinite(TipK[i]), 1:size(TipXYZ, 1)) : Int[]
@@ -220,15 +213,14 @@ function PlotCrackState(P1, P2, P3, Dn; TipXYZ = zeros(0, 3), TipK = Float64[], 
             sqrt(d2[j]) < 0.75 * len && (kseg[q] = Kg[j])
         end
     end
-    # tip line on all three views (outline, then coloured: blues below KI/Kc = 1, reds above)
     kcmap = MK.cgrad([:navy, :deepskyblue, :orangered, :darkred], [0.0, 0.499, 0.501, 1.0])
     function tipline!(ax, ia, ib; lw = 7)
         tx = Float64[]; ty = Float64[]; tc = Float64[]; gx = Float64[]; gy = Float64[]
         for (q, (a, b)) in enumerate(BE)
             if isfinite(kseg[q])
-                append!(tx, [Px[a, ia], Px[b, ia]]); append!(ty, [Px[a, ib], Px[b, ib]]); append!(tc, [kseg[q], kseg[q]])
+                append!(tx, [X[a, ia], X[b, ia]]); append!(ty, [X[a, ib], X[b, ib]]); append!(tc, [kseg[q], kseg[q]])
             else
-                append!(gx, [Px[a, ia], Px[b, ia]]); append!(gy, [Px[a, ib], Px[b, ib]])
+                append!(gx, [X[a, ia], X[b, ia]]); append!(gy, [X[a, ib], X[b, ib]])
             end
         end
         isempty(tx) && isempty(gx) || MK.linesegments!(ax, vcat(tx, gx), vcat(ty, gy), color = :black, linewidth = lw + 3)
@@ -236,34 +228,37 @@ function PlotCrackState(P1, P2, P3, Dn; TipXYZ = zeros(0, 3), TipK = Float64[], 
         return isempty(tx) ? nothing :
                MK.linesegments!(ax, tx, ty; color = clamp.(tc, 0, 2), colormap = kcmap, colorrange = (0, 2), linewidth = lw)
     end
-    kp = tipline!(axF, 1, 2)
-    tipline!(axA, 3, 2; lw = 5)
-    tipline!(axB, 1, 3; lw = 5)
+    kp = tipline!(axF, 1, 3)
+    tipline!(axS, 2, 3; lw = 5)
+    tipline!(axM, 1, 2; lw = 5)
 
-    MK.limits!(axF, ulo, uhi, vlo, vhi)
-    MK.limits!(axA, nlo, nhi, vlo, vhi)
-    MK.limits!(axB, ulo, uhi, nlo, nhi)
-    MK.linkyaxes!(axF, axA); MK.linkxaxes!(axF, axB)
+    MK.limits!(axF, xlo, xhi, zlo, zhi)
+    MK.limits!(axS, ylo, yhi, zlo, zhi)
+    MK.limits!(axM, xlo, xhi, ylo, yhi)
+    MK.linkyaxes!(axF, axS); MK.linkxaxes!(axF, axM)
 
-    # exaggeration marker: double-headed arrow along the across-crack direction, in an empty corner
-    etxt = Exag > 1.5 ? @sprintf("opening ×%.0f", Exag) : "opening ×1 (true scale)"
-    a0 = nlo + 0.05 * nr; a1 = nlo + 0.28 * nr                # left part of the across-crack range
-    yA = vlo + 0.035 * L
-    MK.lines!(axA, [a0, a1], [yA, yA], color = :black, linewidth = 1.5)
-    MK.scatter!(axA, [a0, a1], [yA, yA], marker = [:ltriangle, :rtriangle], color = :black, markersize = 8)
-    MK.text!(axA, a0, yA, text = etxt, align = (:left, :bottom), fontsize = 11, offset = (0, 6))
-    xB = ulo + 0.03 * L
-    MK.lines!(axB, [xB, xB], [a0, a1], color = :black, linewidth = 1.5)
-    MK.scatter!(axB, [xB, xB], [a0, a1], marker = [:dtriangle, :utriangle], color = :black, markersize = 8)
-    MK.text!(axB, xB, a0, text = etxt, align = (:left, :bottom), fontsize = 11, offset = (8, 0))
+    # exaggeration marker: double-headed arrow along the crack normal as seen in each view
+    # (drawn only where the normal is not end-on), in the panel's lower-left corner
+    for (ax, ia, ib, alo, ahi, blo, bhi) in ((axF, 1, 3, xlo, xhi, zlo, zhi), (axS, 2, 3, ylo, yhi, zlo, zhi),
+                                            (axM, 1, 2, xlo, xhi, ylo, yhi))
+        d = [F.n̂[ia], F.n̂[ib]]
+        norm(d) < 0.3 && continue
+        d ./= norm(d)
+        half = 0.1 * min(ahi - alo, bhi - blo)
+        cx = alo + 0.06 * (ahi - alo) + half * abs(d[1]); cy = blo + 0.06 * (bhi - blo) + half * abs(d[2])
+        p0 = (cx - half * d[1], cy - half * d[2]); p1 = (cx + half * d[1], cy + half * d[2])
+        MK.lines!(ax, [p0[1], p1[1]], [p0[2], p1[2]], color = :black, linewidth = 1.5)
+        MK.scatter!(ax, [p0[1], p1[1]], [p0[2], p1[2]], color = :black, markersize = 9, marker = :circle)
+        MK.text!(ax, cx, cy, text = etxt, align = (:left, :bottom), fontsize = 11, offset = (6, 6))
+    end
 
     # colour bars, horizontal, in the empty bottom-right corner
     cb = MK.GridLayout(fig[4, 2], tellwidth = false, tellheight = false)
     MK.Colorbar(cb[1, 1], mp, label = "Opening Dn [m]", vertical = false, flipaxis = false,
                 width = MK.Relative(0.9), height = 12, labelsize = 12, ticklabelsize = 10)
-    kp === nothing || MK.Colorbar(cb[2, 1], kp, label = "Tip line KI/Kc: red >1 grows, blue <1 (grey: no value)", vertical = false,
-                                  flipaxis = false, width = MK.Relative(0.9), height = 12, labelsize = 12,
-                                  ticklabelsize = 10, ticks = [0, 0.5, 1, 1.5, 2])
+    kp === nothing || MK.Colorbar(cb[2, 1], kp, label = "Tip line KI/Kc: red >1 grows, blue <1 (grey: no value)",
+                                  vertical = false, flipaxis = false, width = MK.Relative(0.9), height = 12,
+                                  labelsize = 12, ticklabelsize = 10, ticks = [0, 0.5, 1, 1.5, 2])
     try
         MK.resize_to_layout!(fig)
     catch
@@ -374,16 +369,14 @@ function RenderRun(dir; every = 1, outdir = joinpath(dir, "frames"), ρ0 = nothi
     data = [ReadStep(st) for st in steps]
     log = _readlog(dir)
     Dmax = maximum(maximum(d.Dn) for d in data)
-    F = ViewFrame(data[end].P1, data[end].P2, data[end].P3)   # one frame for the whole run
     Q = vcat([vcat(d.P1, d.P2, d.P3) for d in data]...)
-    Q = hcat(Q * F.û, Q * F.v̂, Q * F.n̂ .- F.n0)
     lo = vec(minimum(Q, dims = 1)); hi = vec(maximum(Q, dims = 1))
-    abs(F.v̂[3]) > 0.98 && (hi[2] = max(hi[2], 0.0))           # keep the surface in view
-    span = maximum(begin W = vcat(d.P1, d.P2, d.P3); max(maximum(W * F.û) - minimum(W * F.û), maximum(W * F.v̂) - minimum(W * F.v̂)) end for d in data)
-    E = max(1.0, 0.1 * 1.08 * max(hi[1] - lo[1], hi[2] - lo[2]) / Dmax)   # ≥ 1/10 of the plot, every frame
-    pad = 0.04 * max(hi[1] - lo[1], hi[2] - lo[2])
-    nc = (lo[3] + hi[3]) / 2; hw = 0.6 * E * Dmax + (hi[3] - lo[3]) / 2
-    L = (lo[1] - pad, hi[1] + pad, lo[2] - pad, hi[2] + pad, nc - hw, nc + hw)
+    hi[3] = max(hi[3], 0.0)                                  # keep the surface in view
+    span = maximum(begin W = vcat(d.P1, d.P2, d.P3); maximum(maximum(W, dims = 1) .- minimum(W, dims = 1)) end for d in data)
+    E = max(1.0, 0.1 * 1.1 * span / Dmax)                    # same exaggeration in every frame
+    pad = 0.04 * max(hi[1] - lo[1], hi[3] - lo[3])
+    hw = 0.6 * E * Dmax
+    L = (lo[1] - pad, hi[1] + pad, lo[2] - hw - pad, hi[2] + hw + pad, lo[3] - pad, hi[3] + pad)
     mkpath(outdir)
     times = Float64[]
     for (st, d) in zip(steps, data)
@@ -391,7 +384,7 @@ function RenderRun(dir; every = 1, outdir = joinpath(dir, "frames"), ρ0 = nothi
         meta = (step = st.i, V = lg.V, P = lg.P, ρ = ρ0 === nothing ? NaN : lg.s * ρ0)
         t = @elapsed begin
             fig = PlotCrackState(d.P1, d.P2, d.P3, d.Dn; TipXYZ = d.TipXYZ, TipK = d.TipK, Kc = d.Kc,
-                                 meta = meta, Dnmax = Dmax, Exag = E, frame = F, lims = L)
+                                 meta = meta, Dnmax = Dmax, Exag = E, lims = L)
             SaveFig(joinpath(outdir, @sprintf("frame_%04d.png", st.i)), fig)
         end
         push!(times, t)

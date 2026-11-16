@@ -23,7 +23,7 @@ CutAndDisplaceJuliaPlots.PlotMeshBoundary(MidPoint, P1, P2, P3, FaceNormalVector
 <br>
 ## Crack views (fast, for propagation runs)<br>
 <br>
-Square figure with three aligned views of the opened crack in its own frame (face-on, edge-on along strike, edge-on down-dip), triangles coloured by opening and the tip line coloured by KI/Kc (red >1 grows, blue <1). Drawn with CairoMakie (no GPU), about 0.2 s per frame.<br>
+Square figure with three aligned views of the opened crack on fixed world axes: x–z (top left), y–z (top right, shares z) and x–y map view (bottom left, shares x), triangles coloured by opening and the tip line coloured by KI/Kc (red >1 grows, blue <1). Drawn with CairoMakie (no GPU), about 0.2 s per frame.<br>
 <br>
 fig = CutAndDisplaceJuliaPlots.PlotCrackState(P1, P2, P3, Dn; TipXYZ = [XMid YMid ZMid], TipK = StrainEnergyV, Kc = KCrit, meta = (step = i,))<br>
 CutAndDisplaceJuliaPlots.SaveFig("step.png", fig)<br>
